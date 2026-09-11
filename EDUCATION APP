@@ -1,0 +1,103 @@
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+
+const STAGES = ['6th Standard', '7th Standard', '8th Standard', '9th Standard', '10th Standard'];
+const SUBJECTS = ['Mathematics', 'Science', 'English', 'Social Studies'];
+
+export default function App() {
+  const [selectedStage, setSelectedStage] = useState('6th Standard');
+  const [selectedSubject, setSelectedSubject] = useState('Mathematics');
+  const [chapters, setChapters] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Mock API call fetch matching backend logic
+  useEffect(() => {
+    setLoading(true);
+    // Replace with your local network IP or deployed backend URL
+    fetch(`http://localhost:5000/api/chapters?stage=${encodeURIComponent(selectedStage)}&subject=${encodeURIComponent(selectedSubject)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setChapters(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching data: ", err);
+        setLoading(false);
+      });
+  }, [selectedStage, selectedSubject]);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.headerTitle}>🎓 Schoolify Learning App</Text>
+
+      {/* Standard Selector */}
+      <View style={styles.selectorContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {STAGES.map((stage) => (
+            <TouchableOpacity 
+              key={stage} 
+              style={[styles.pill, selectedStage === stage && styles.activePill]}
+              onPress={() => setSelectedStage(stage)}
+            >
+              <Text style={[styles.pillText, selectedStage === stage && styles.activePillText]}>{stage}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Subject Selector */}
+      <View style={styles.selectorContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {SUBJECTS.map((subject) => (
+            <TouchableOpacity 
+              key={subject} 
+              style={[styles.subjectPill, selectedSubject === subject && styles.activeSubPill]}
+              onPress={() => setSelectedSubject(subject)}
+            >
+              <Text style={[styles.pillText, selectedSubject === subject && styles.activePillText]}>{subject}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Chapters Display area */}
+      <Text style={styles.sectionTitle}>Modules & Lessons ({selectedStage})</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#4F46E5" style={{ marginTop: 40 }} />
+      ) : (
+        <ScrollView style={styles.chapterList}>
+          {chapters.map((item, index) => (
+            <View key={index} style={styles.card}>
+              <View>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardSubtitle}>{item.topics} Topics • {item.duration}</Text>
+              </View>
+              <TouchableOpacity style={styles.startButton}>
+                <Text style={styles.btnText}>Start</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F9FAFB', paddingTop: 20 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#111827', textAlign: 'center', marginVertical: 10 },
+  selectorContainer: { paddingHorizontal: 15, marginVertical: 6 },
+  pill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#E5E7EB', marginRight: 8 },
+  activePill: { backgroundColor: '#4F46E5' },
+  subjectPill: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#D1D5DB', marginRight: 8 },
+  activeSubPill: { backgroundColor: '#10B981', borderColor: '#10B981' },
+  pillText: { color: '#4B5563', fontWeight: '600', fontSize: 13 },
+  activePillText: { color: '#FFFFFF' },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginHorizontal: 15, marginTop: 15, color: '#374151' },
+  chapterList: { paddingHorizontal: 15, marginTop: 10 },
+  card: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2 },
+  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1F2937' },
+  cardSubtitle: { fontSize: 13, color: '#6B7280', marginTop: 4 },
+  startButton: { backgroundColor: '#4F46E5', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  btnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 }
+});
